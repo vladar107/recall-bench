@@ -1,0 +1,9 @@
+# machine-generated during a replication run (stays local)
+bank.json
+results.json
+submission.json
+out/
+combined.csv
+runhome/.claude/projects/
+*.err
+__pycache__/
