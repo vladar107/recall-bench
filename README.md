@@ -68,7 +68,7 @@ numbers); there is no human grading step.
 ## Run it
 
 ```bash
-git clone <this repo> && cd agent-memory-bench
+git clone https://github.com/vladar107/agent-memory-bench.git && cd agent-memory-bench
 python3 bench.py all
 ```
 
