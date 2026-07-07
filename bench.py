@@ -11,6 +11,9 @@ Stages (each idempotent/resumable; `all` runs the full pipeline):
   python3 bench.py judge     [--judge-model opus]
   python3 bench.py report
   python3 bench.py package   [--include-questions]
+  python3 bench.py clean --yes   (after you're done: delete the benchmark's own
+                                  session transcripts from ~/.claude/projects and
+                                  reindex claudescope; dry-run without --yes)
   python3 bench.py all
 
 Everything runs and stays local. `package` writes submission.json containing
@@ -325,9 +328,46 @@ def stage_package(a):
           f'question text {"INCLUDED" if a.include_questions else "excluded"})')
     print('  review it, then share submission.json with the study author.')
 
+# ------------------------------------------------------------------- clean
+def stage_clean(a):
+    """Delete the transcript buckets created by this benchmark's own headless
+    runs (curators, verifiers, measured runs, judges all execute with
+    cwd=<kit>/runhome), then ask claudescope to reindex so they drop out of
+    the index. Touches ONLY directories matching this kit's runhome slug."""
+    runhome = os.path.realpath(f'{K}/runhome')
+    slug = '-' + re.sub(r'[^A-Za-z0-9]+', '-', runhome).strip('-')
+    proj = os.path.expanduser('~/.claude/projects')
+    targets = []
+    if os.path.isdir(proj):
+        for d in os.listdir(proj):
+            if d == slug or d.endswith(slug[-60:]):
+                targets.append(os.path.join(proj, d))
+    if not targets:
+        print('  nothing to clean (no benchmark transcript buckets found)')
+        return
+    n = sum(len(files) for t in targets for _, _, files in os.walk(t))
+    for t in targets:
+        print(f'  {"deleting" if a.yes else "would delete"}: {t} ({n} files)')
+    if not a.yes:
+        print('  dry run — re-run as `bench.py clean --yes` to delete')
+        return
+    for t in targets:
+        shutil.rmtree(t)
+    # nudge claudescope to drop the deleted sessions from its index
+    dj = os.path.expanduser('~/.claudescope/daemon.json')
+    try:
+        port = json.load(open(dj)).get('port', 4317)
+        import urllib.request
+        req = urllib.request.Request(f'http://127.0.0.1:{port}/api/reindex', method='POST')
+        urllib.request.urlopen(req, timeout=120).read()
+        print('  deleted + claudescope reindexed')
+    except Exception:
+        print('  deleted; claudescope will drop them on its next start/reindex')
+
 # -------------------------------------------------------------------- main
 STAGES = {'preflight': stage_preflight, 'curate': stage_curate, 'verify': stage_verify,
-          'run': stage_run, 'judge': stage_judge, 'report': stage_report, 'package': stage_package}
+          'run': stage_run, 'judge': stage_judge, 'report': stage_report,
+          'package': stage_package, 'clean': stage_clean}
 
 p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 p.add_argument('stage', choices=list(STAGES) + ['all'])
@@ -341,6 +381,7 @@ p.add_argument('--judge-model', default='claude-opus-4-8')
 p.add_argument('--concurrency', type=int, default=5)
 p.add_argument('--window-days', type=int, default=21)
 p.add_argument('--include-questions', action='store_true')
+p.add_argument('--yes', action='store_true', help='confirm deletion for the clean stage')
 a = p.parse_args()
 
 if a.stage == 'all':

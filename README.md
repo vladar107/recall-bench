@@ -62,9 +62,8 @@ numbers); there is no human grading step.
   `--include-questions` opts in to sharing question text; only use it after
   reviewing every question.
 - The benchmark's own runs create Claude Code session transcripts under
-  `~/.claude/projects/` (two `runhome` project folders); delete them
-  afterwards if you wish — claudescope drops them from its index on the next
-  reindex.
+  `~/.claude/projects/`; when you're done, `python3 bench.py clean --yes`
+  deletes them and reindexes claudescope (dry-run without `--yes`).
 
 ## Run it
 
@@ -84,6 +83,7 @@ python3 bench.py run          # the measured runs (cold, tool-isolated)
 python3 bench.py judge        # blind grading
 python3 bench.py report       # scoreboard + results.json
 python3 bench.py package      # submission.json (metrics only)
+python3 bench.py clean --yes  # afterwards: remove the benchmark's own transcripts
 ```
 
 **Checkpoint after `verify`: skim `bank.json`.** Delete any question that
