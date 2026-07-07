@@ -1,4 +1,4 @@
-# agent-memory-bench
+# recall-bench
 
 **How should a coding agent search its own history — a purpose-built index, or
 grep over raw transcripts?** This benchmark measures it *on your machine, with
@@ -68,7 +68,7 @@ numbers); there is no human grading step.
 ## Run it
 
 ```bash
-git clone https://github.com/vladar107/agent-memory-bench.git && cd agent-memory-bench
+git clone https://github.com/vladar107/recall-bench.git && cd recall-bench
 python3 bench.py all
 ```
 
