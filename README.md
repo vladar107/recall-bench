@@ -45,7 +45,8 @@ numbers); there is no human grading step.
 
 - **Claude Code** CLI, logged in (`claude --version` works)
 - **claudescope ≥ 0.11.0**: `npm i -g @vladar107/claudescope` (or brew / nix)
-- **A real corpus**: ≥ ~30 Claude Code sessions in the last 3 weeks
+- **A real corpus**: ≥ ~30 Claude Code sessions **or** ≥ ~30 MB of
+  transcripts in the last 3 weeks (a few marathon sessions count too)
 - macOS or Linux, `zsh`, `python3` (stdlib only)
 - **Budget**: defaults (40 questions × 4 arms × 3 reps + curation + judging)
   ≈ **$150–220** API usage. Lite run (`--questions 20 --reps 1`) ≈ $35–50.

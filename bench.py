@@ -97,14 +97,28 @@ def stage_preflight(a):
         check('claudescope daemon', healthy, 'claudescope start')
     proj = os.path.expanduser('~/.claude/projects')
     frm, to = window(a)
-    recent = 0
+    recent, size, days = 0, 0, set()
     if os.path.isdir(proj):
         cutoff = datetime.datetime.strptime(frm, '%Y-%m-%d').timestamp()
         for root, _, files in os.walk(proj):
-            recent += sum(1 for f in files if f.endswith('.jsonl')
-                          and os.path.getmtime(os.path.join(root, f)) >= cutoff)
-    check(f'≥ 30 Claude Code sessions active in window {frm}..{to} (found ~{recent})',
-          recent >= 30, 'benchmark needs a few weeks of real usage')
+            for f in files:
+                if not f.endswith('.jsonl'):
+                    continue
+                fp = os.path.join(root, f)
+                mt = os.path.getmtime(fp)
+                if mt >= cutoff:
+                    recent += 1
+                    size += os.path.getsize(fp)
+                    days.add(datetime.date.fromtimestamp(mt))
+    mb = size / 1e6
+    # Either many sessions OR a lot of material: a few marathon sessions are
+    # as question-rich as dozens of small ones.
+    check(f'corpus volume in {frm}..{to}: ~{recent} sessions / {mb:.0f} MB '
+          f'(need ≥ 30 sessions OR ≥ 30 MB)',
+          recent >= 30 or mb >= 30, 'benchmark needs a few weeks of real usage')
+    if len(days) < 7:
+        print(f'  [warn] activity spans only {len(days)} distinct day(s) — question '
+              'curation prefers events spread across the window; expect a smaller bank')
     # The harness injects its own MCP config, so user registration is NOT
     # required — what matters is that `claudescope mcp` speaks MCP. Handshake:
     init = ('{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":'
