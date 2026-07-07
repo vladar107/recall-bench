@@ -317,7 +317,7 @@ STAGES = {'preflight': stage_preflight, 'curate': stage_curate, 'verify': stage_
 
 p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 p.add_argument('stage', choices=list(STAGES) + ['all'])
-p.add_argument('--questions', type=int, default=20)
+p.add_argument('--questions', type=int, default=40)
 p.add_argument('--reps', type=int, default=3)
 p.add_argument('--arms', default='mcp,files,hybrid,skill')
 p.add_argument('--model', default='claude-sonnet-5')

@@ -47,8 +47,8 @@ numbers); there is no human grading step.
 - **claudescope ≥ 0.11.0**: `npm i -g @vladar107/claudescope` (or brew / nix)
 - **A real corpus**: ≥ ~30 Claude Code sessions in the last 3 weeks
 - macOS or Linux, `zsh`, `python3` (stdlib only)
-- **Budget**: defaults (20 questions × 4 arms × 3 reps + curation + judging)
-  ≈ **$80–120** API usage. Lite run (`--reps 1`) ≈ $35–50.
+- **Budget**: defaults (40 questions × 4 arms × 3 reps + curation + judging)
+  ≈ **$150–220** API usage. Lite run (`--questions 20 --reps 1`) ≈ $35–50.
 
 ## Privacy — read this first
 
@@ -88,7 +88,7 @@ python3 bench.py package      # submission.json (metrics only)
 **Checkpoint after `verify`: skim `bank.json`.** Delete any question that
 looks wrong, ambiguous, or too private, then continue with `run`.
 
-Useful flags: `--questions 20` · `--reps 3` · `--arms mcp,files,hybrid,skill`
+Useful flags: `--questions 40` · `--reps 3` · `--arms mcp,files,hybrid,skill`
 · `--model claude-sonnet-5` · `--judge-model claude-opus-4-8` ·
 `--concurrency 5` · `--window-days 21`. Keep the default models if you want
 your numbers pooled with other submissions.
