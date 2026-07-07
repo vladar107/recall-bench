@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-agent-memory-bench — portable replication harness.
+recall-bench — portable replication harness.
 
 Stages (each idempotent/resumable; `all` runs the full pipeline):
 
@@ -16,9 +16,10 @@ Stages (each idempotent/resumable; `all` runs the full pipeline):
                                   reindex claudescope; dry-run without --yes)
   python3 bench.py all
 
-Everything runs and stays local. `package` writes submission.json containing
-per-run METRICS and question METADATA only — no transcript content, no
-question text, no answers — unless you opt in with --include-questions.
+Everything runs and stays local. `package` writes submissions/<machine-id>.json
+containing per-run METRICS and question METADATA only — no transcript content,
+no question text, no answers — unless you opt in with --include-questions.
+Share that one file (PR or email); nothing else.
 """
 import argparse, datetime, hashlib, json, os, platform, random, re, shutil, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -323,10 +324,12 @@ def stage_package(a):
                       'window_days': a.window_days},
            'questions': qmeta,
            'runs': rows}
-    json.dump(sub, open(f'{K}/submission.json', 'w'), indent=1)
-    print(f'  wrote submission.json (machine {machine}, {len(rows)} runs, '
+    os.makedirs(f'{K}/submissions', exist_ok=True)
+    path = f'{K}/submissions/{machine}.json'
+    json.dump(sub, open(path, 'w'), indent=1)
+    print(f'  wrote submissions/{machine}.json ({len(rows)} runs, '
           f'question text {"INCLUDED" if a.include_questions else "excluded"})')
-    print('  review it, then share submission.json with the study author.')
+    print('  share that ONE file: open a PR adding it, or email it to the study author.')
 
 # ------------------------------------------------------------------- clean
 def stage_clean(a):

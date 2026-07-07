@@ -56,9 +56,10 @@ numbers); there is no human grading step.
 - Everything runs **locally**; no data leaves your machine during the benchmark.
 - The generated `bank.json` contains excerpts of your history — **it stays
   with you**.
-- The only file you share is `submission.json`: run metrics (scores, cost,
-  latency, turns, tool mix) and question **metadata** (category, difficulty,
-  date, provenance) — no question text, no answers, no transcript content.
+- The only file you share is `submissions/<machine-id>.json`: run metrics
+  (scores, cost, latency, turns, tool mix) and question **metadata** (category,
+  difficulty, date, provenance) — no question text, no answers, no transcript
+  content.
   `--include-questions` opts in to sharing question text; only use it after
   reviewing every question.
 - The benchmark's own runs create Claude Code session transcripts under
@@ -82,7 +83,7 @@ python3 bench.py verify       # cross-provenance reference verification
 python3 bench.py run          # the measured runs (cold, tool-isolated)
 python3 bench.py judge        # blind grading
 python3 bench.py report       # scoreboard + results.json
-python3 bench.py package      # submission.json (metrics only)
+python3 bench.py package      # submissions/<machine-id>.json (metrics only)
 python3 bench.py clean --yes  # afterwards: remove the benchmark's own transcripts
 ```
 
@@ -96,10 +97,13 @@ your numbers pooled with other submissions.
 
 ## Send your results
 
-1. Open `submission.json` and confirm you're comfortable with its contents
-   (it is small and human-readable).
-2. Email it to **vladar107@gmail.com** or open an issue/PR on this repo
-   attaching the file.
+`package` writes exactly one shareable file: `submissions/<machine-id>.json`.
+Skim it, then either:
+
+- **open a PR** on this repo adding that one file, or
+- **email it** to **vladar107@gmail.com**.
+
+That's all — nothing else is needed.
 
 Every submission is credited in the paper's replication section (or kept
 anonymous on request — the machine id is already a salted hash).
@@ -131,7 +135,7 @@ arms/                     per-arm system prompts
 prompts/                  curator / assembler / verifier prompts
 runhome/                  neutral cwd for runs (contains the claudescope skill)
 aggregate_submissions.py  cross-machine pooling & stats
-submissions/              collected submission.json files
+submissions/              collected submissions, one <machine-id>.json each
 ```
 
 ## Method notes
