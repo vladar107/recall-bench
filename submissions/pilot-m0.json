@@ -20,7 +20,8 @@
   "curator_model": "claude-opus-4-8",
   "n_questions": 41,
   "window_days": 21,
-  "note": "original study (paper v0.2); bank curated 2026-07-06"
+  "note": "original study (paper v0.2); dual-provenance curation \u2014 reference only, excluded from pooled v2 statistics",
+  "protocol": "v1-dual-provenance"
  },
  "questions": [
   {

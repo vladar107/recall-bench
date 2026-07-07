@@ -20,11 +20,20 @@ def med(xs): return sorted(xs)[len(xs)//2] if xs else 0.0
 if len(sys.argv) < 2:
     sys.exit(__doc__)
 
-subs = []
+subs, reference = [], []
 for path in sys.argv[1:]:
     s = json.load(open(path))
     s['_path'] = path
-    subs.append(s)
+    proto = s.get('config', {}).get('protocol', 'v1')
+    (subs if proto.startswith('v2') else reference).append(s)
+if reference:
+    print(f"note: {len(reference)} submission(s) use a pre-v2 protocol "
+          f"({', '.join(r['machine_id'] for r in reference)}) — shown per-machine "
+          f"below but EXCLUDED from pooled statistics.\n")
+    subs_pooled = subs
+    subs = reference + subs   # per-machine tables show everything
+else:
+    subs_pooled = subs
 
 # ---- per-machine tables ----
 print(f'{len(subs)} submission(s)\n')
@@ -43,7 +52,9 @@ for s in subs:
               f"{med([r['cost'] for r in sel]):>7.3f} {med([r['secs'] for r in sel]):>6.0f} "
               f"{sum(1 for r in sel if r.get('dnf')):>4}")
     print()
-    # per-question means for paired contrasts
+    # per-question means for paired contrasts (v2-protocol submissions only)
+    if s not in subs_pooled:
+        continue
     qm = defaultdict(dict)
     for r in graded:
         qm[r['qid']].setdefault(r['arm'], []).append(r['score'])

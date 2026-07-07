@@ -49,6 +49,12 @@ def headless(prompt, model, arm=None, max_turns=40):
         args += ['--mcp-config', f'{K}/mcp-empty.json',
                  '--allowedTools', 'Bash', 'Grep', 'Glob', 'Read']
         disallow += ['Skill']
+    elif arm == 'hybrid':
+        args += ['--mcp-config', f'{K}/mcp-claudescope.json', '--allowedTools',
+                 'Bash', 'Grep', 'Glob', 'Read',
+                 *[f'mcp__claudescope__{t}' for t in ('search_transcripts', 'list_sessions',
+                   'get_session', 'list_projects', 'get_analytics', 'get_memory')]]
+        disallow += ['Skill']
     elif arm == 'none':
         args += ['--mcp-config', f'{K}/mcp-empty.json', '--allowedTools', 'Read']
         disallow += ['Bash', 'Grep', 'Glob', 'Skill']
@@ -122,34 +128,28 @@ def stage_curate(a):
     per_cat = max(1, round(a.questions * 1.4 / 5 / 2))  # 40% buffer, 2 curators
     n_cand = per_cat * 5
     tmpl = open(f'{K}/prompts/curator.md').read()
-    jobs = {
-        'files': ('you must discover material by browsing the RAW transcript files directly '
-                  '(~/.claude/projects/**/*.jsonl) — do NOT use claudescope in any form '
-                  '(no MCP, no CLI, no HTTP to localhost, and ~/.claudescope is off-limits).', 'F'),
-        'mcp': ('you must discover material using the claudescope MCP tools ONLY '
-                '(search_transcripts, list_sessions, get_session, list_projects, get_analytics, '
-                'get_memory) — do NOT read raw transcript files.', 'M'),
-    }
-    for prov, (rule, prefix) in jobs.items():
-        out = f'{OUT}/candidates_{prov}.json'
+    # Two curators, EACH with both access paths (fairness rule in the prompt:
+    # every candidate must be confirmed through both raw files and the index).
+    for prefix in ('A', 'B'):
+        out = f'{OUT}/candidates_{prefix}.json'
         if os.path.exists(out):
-            print(f'  skip curate:{prov} (exists)'); continue
-        print(f'  curating via {prov} ({n_cand} candidates, model={a.curator_model}) …')
-        prompt = (tmpl.replace('{PROVENANCE_RULE}', rule).replace('{N_CANDIDATES}', str(n_cand))
+            print(f'  skip curate:{prefix} (exists)'); continue
+        print(f'  curator {prefix} ({n_cand} candidates, model={a.curator_model}) …')
+        prompt = (tmpl.replace('{N_CANDIDATES}', str(n_cand))
                   .replace('{N_PER_CAT}', str(per_cat)).replace('{FROM}', frm)
                   .replace('{TO}', to).replace('{ID_PREFIX}', prefix))
-        d = headless(prompt, a.curator_model, arm=('files' if prov == 'files' else 'mcp'), max_turns=80)
+        d = headless(prompt, a.curator_model, arm='hybrid', max_turns=100)
         cand = extract_json_array(d.get('result', '')) if d else None
         if not cand:
-            print(f'  ! curator {prov} failed — rerun `curate`'); sys.exit(1)
+            print(f'  ! curator {prefix} failed — rerun `curate`'); sys.exit(1)
         json.dump(cand, open(out, 'w'), indent=1)
-        print(f'  curator {prov}: {len(cand)} candidates (${d.get("total_cost_usd", 0):.2f})')
+        print(f'  curator {prefix}: {len(cand)} candidates (${d.get("total_cost_usd", 0):.2f})')
     # assemble
     bank_path = f'{K}/bank.json'
     if os.path.exists(bank_path):
         print('  skip assemble (bank.json exists)'); return
-    cands = (json.load(open(f'{OUT}/candidates_files.json')) +
-             json.load(open(f'{OUT}/candidates_mcp.json')))
+    cands = (json.load(open(f'{OUT}/candidates_A.json')) +
+             json.load(open(f'{OUT}/candidates_B.json')))
     tmpl = open(f'{K}/prompts/assembler.md').read()
     prompt = (tmpl.replace('{N_FINAL}', str(a.questions))
               .replace('{TARGET_PER_CAT}', str(a.questions // 5))
@@ -172,14 +172,20 @@ def stage_verify(a):
     if os.path.exists(vp):
         verdicts = json.load(open(vp))
     def one(q):
-        # verify through the OPPOSITE provenance to the one that found it
-        arm = 'files' if q.get('provenance') == 'mcp' else 'mcp'
-        prompt = (tmpl.replace('{QUESTION}', q['question'])
-                  .replace('{REFERENCE}', q['reference']).replace('{EVIDENCE}', q.get('evidence', '')))
-        d = headless(prompt, a.verifier_model, arm=arm)
-        r = (d or {}).get('result', '')
-        m = re.search(r'VERDICT:\s*(\w+)', r)
-        return q['id'], (m.group(1) if m else 'UNVERIFIABLE'), r[:200]
+        # EQUAL-OPPORTUNITY verification: the reference must be independently
+        # confirmable through BOTH access paths, else the question is unfair
+        # to one arm and is dropped.
+        verdicts = []
+        for arm in ('files', 'mcp'):
+            prompt = (tmpl.replace('{QUESTION}', q['question'])
+                      .replace('{REFERENCE}', q['reference']).replace('{EVIDENCE}', q.get('evidence', '')))
+            d = headless(prompt, a.verifier_model, arm=arm)
+            r = (d or {}).get('result', '')
+            m = re.search(r'VERDICT:\s*(\w+)', r)
+            verdicts.append((arm, m.group(1) if m else 'UNVERIFIABLE', r[:120]))
+        combined = 'CONFIRMED' if all(v == 'CONFIRMED' for _, v, _ in verdicts) else \
+                   '/'.join(f'{a_}:{v}' for a_, v, _ in verdicts)
+        return q['id'], combined, ' | '.join(n for _, _, n in verdicts)
     todo = [q for q in bank if q['id'] not in verdicts]
     print(f'  verifying {len(todo)} references (model={a.verifier_model}) …')
     with ThreadPoolExecutor(max_workers=a.concurrency) as ex:
@@ -294,7 +300,8 @@ def stage_package(a):
            'date': datetime.date.today().isoformat(),
            'platform': platform.system(),
            'tool_versions': {'claude_cli': claude_v, 'claudescope': scope_v},
-           'config': {'reps': a.reps, 'arms': a.arms.split(','), 'model': a.model,
+           'config': {'protocol': 'v2-hybrid-curation-dual-verify',
+                      'reps': a.reps, 'arms': a.arms.split(','), 'model': a.model,
                       'judge_model': a.judge_model, 'n_questions': len(bank),
                       'window_days': a.window_days},
            'questions': qmeta,

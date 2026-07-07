@@ -15,8 +15,8 @@ same corpus through different access paths. Your job:
    provenances represented, and days spread across the window.
 
 Return ONLY a JSON array of the selected question objects, unchanged except:
-renumber ids Q01..Q{N_FINAL}, add "provenance":"mcp"|"files" (from the source
-id prefix M/F), and add "flags":[] (list any concerns per question).
+renumber ids Q01..Q{N_FINAL}, add "provenance":"both" (curators held both
+access paths), and add "flags":[] (list any concerns per question).
 
 CANDIDATES:
 {CANDIDATES_JSON}

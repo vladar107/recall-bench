@@ -24,11 +24,16 @@ history, fully tool-isolated:
 | `files` | raw transcripts | grep / jq / file reads | MCP absent; index state banned |
 
 The pipeline is fully automated: it **generates a question bank from your own
-corpus** (two curator agents with opposite discovery paths), **cross-verifies
-every reference answer** through the opposite access path (unconfirmed
-questions are dropped), runs every question × arm × repetition as a **cold,
-isolated `claude -p` process**, grades answers **blind** with a different,
-stronger model, and packages metrics for sharing.
+corpus** (two curator agents, each holding BOTH access paths and alternating
+which one leads discovery), **verifies every reference answer independently
+through both paths** — raw files AND the index — and drops any question that
+only one path can confirm, so no question structurally favors either arm. It
+then runs every question × arm × repetition as a **cold, isolated
+`claude -p` process**, grades answers **blind** with a different, stronger
+model, and packages metrics for sharing. (Protocol `v2`; the original study
+used a slightly weaker dual-provenance curation and is kept in
+`submissions/pilot-m0.json` as reference only — pooled statistics use v2
+submissions exclusively.)
 
 **Models (defaults, pinned — versions matter for comparability):**
 research arms `claude-sonnet-5`; curation, assembly and blind judging
@@ -110,9 +115,10 @@ It prints per-machine scoreboards, then pooled paired accuracy contrasts
 (MCP vs files, MCP vs skill, hybrid vs files) with a two-level cluster
 bootstrap — resampling machines first, then questions within each machine —
 so no single corpus dominates and confidence intervals reflect between-machine
-variation. It also writes `combined.csv` (one row per run across all machines)
-for your own analysis. The original study's data is included as
-[`submissions/pilot-m0.json`](submissions/pilot-m0.json).
+variation. Submissions from pre-v2 protocols (including the original study,
+[`submissions/pilot-m0.json`](submissions/pilot-m0.json)) are displayed
+per-machine but excluded from the pooled statistics. It also writes
+`combined.csv` (one row per run across all machines) for your own analysis.
 
 ## Repo layout
 
