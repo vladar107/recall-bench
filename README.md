@@ -49,7 +49,7 @@ numbers); there is no human grading step.
   transcripts in the last 3 weeks (a few marathon sessions count too)
 - macOS or Linux, `zsh`, `python3` (stdlib only)
 - **Budget**: defaults (40 questions × 4 arms × 3 reps + curation + judging)
-  ≈ **$150–220** API usage. Lite run (`--questions 20 --reps 1`) ≈ $35–50.
+  ≈ **$50–70** API usage. Lite run (`--questions 20 --reps 1`) ≈ $15–30.
 
 ## Privacy — read this first
 
