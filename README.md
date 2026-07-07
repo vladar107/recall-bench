@@ -4,8 +4,8 @@
 grep over raw transcripts?** This benchmark measures it *on your machine, with
 your real history*, and takes ~2 hours of unattended runtime.
 
-It accompanies the preprint *"Grep or Index? A Controlled Comparison of
-Retrieval Interfaces for Coding-Agent Memory"* (Ramazaev, 2026). The original
+It accompanies the preprint *"MCP, Skill, or Grep? A Controlled Comparison
+of Memory Access for Coding Agents"* (Ramazaev, 2026). The original
 study (one corpus, 492 runs) found an indexed interface **2.8× faster, 2.3×
 cheaper, and +9 pp more accurate** than raw-file search — with the accuracy
 gap concentrated in synthesis workloads. One corpus proves little.
