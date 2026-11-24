@@ -125,6 +125,35 @@ variation. Submissions from pre-v2 protocols (including the original study,
 per-machine but excluded from the pooled statistics. It also writes
 `combined.csv` (one row per run across all machines) for your own analysis.
 
+## Runs on other models
+
+The pooled study uses Claude Sonnet 5 as the agent and Claude Opus 4.8 as the
+judge. Runs with a different agent or judge live in their own folder under
+`submissions/` and are **not** pooled with it: the `submissions/*.json` glob
+above does not pick them up.
+
+[`submissions/opus-5-5/bfc6f8fbddfa.json`](submissions/opus-5-5/bfc6f8fbddfa.json)
+— agent `claude-opus-5-5`, judge `claude-fable-5-2`, one machine, 32 verified
+questions, 3 reps, 96 runs per arm, no DNF. Means of per-question means:
+
+| arm    | accuracy | time   | cost    | turns |
+|--------|---------:|-------:|--------:|------:|
+| files  | 96.4%    | 24.4 s | $0.179  | 5.8   |
+| mcp    | 99.0%    | 13.3 s | $0.162  | 5.1   |
+| skill  | 98.4%    | 16.4 s | $0.199  | 6.1   |
+| hybrid | 97.9%    | 30.9 s | $0.175  | 5.8   |
+
+MCP is about 1.8× faster than raw files, as in the pooled study (2.35×). The
+cost advantage shrinks from 45% to 9%, because this agent needs about 6 turns
+on raw files where Sonnet 5 needed about 10. Accuracy is again not
+distinguishable: MCP − files is +2.6 pp, 95% CI [−1.0, +7.8] (bootstrap over
+questions).
+
+Read it as a comparison between arms within this run only. Agent, judge,
+machine and question set all differ from the pooled study, so differences
+between the two tables cannot be attributed to the model, and only three
+questions were ever answered imperfectly (a ceiling effect).
+
 ## Repo layout
 
 ```
