@@ -133,7 +133,7 @@ judge. Runs with a different agent or judge live in their own folder under
 above does not pick them up.
 
 [`submissions/opus-5-5/bfc6f8fbddfa.json`](submissions/opus-5-5/bfc6f8fbddfa.json)
-— agent `claude-opus-5-5`, judge `claude-fable-5-2`, one machine, 32 verified
+— agent `claude-opus-5-5`, judge `claude-fable-5-2`, 32 verified
 questions, 3 reps, 96 runs per arm, no DNF. Means of per-question means:
 
 | arm    | accuracy | time   | cost    | turns |
@@ -149,10 +149,28 @@ on raw files where Sonnet 5 needed about 10. Accuracy is again not
 distinguishable: MCP − files is +2.6 pp, 95% CI [−1.0, +7.8] (bootstrap over
 questions).
 
-Read it as a comparison between arms within this run only. Agent, judge,
-machine and question set all differ from the pooled study, so differences
-between the two tables cannot be attributed to the model, and only three
-questions were ever answered imperfectly (a ceiling effect).
+[`submissions/opus-5-5/76e5ed2a991d.json`](submissions/opus-5-5/76e5ed2a991d.json)
+— same agent and judge on a second machine, with curation and verification
+also on `claude-opus-5-5`: 37 verified questions, 3 reps, 111 runs per arm,
+no DNF. This is the machine behind the pooled `submissions/76e5ed2a991d.json`
+Sonnet 5 run, on a newer 21-day window and a new question bank.
+
+| arm    | accuracy | time   | cost    | turns |
+|--------|---------:|-------:|--------:|------:|
+| files  | 96.8%    | 24.5 s | $0.194  | 6.0   |
+| mcp    | 100.0%   | 11.9 s | $0.150  | 5.2   |
+| skill  | 100.0%   | 15.4 s | $0.213  | 6.7   |
+| hybrid | 99.1%    | 37.2 s | $0.188  | 5.4   |
+
+MCP is 2.1× faster and 23% cheaper than raw files. MCP − files accuracy is
++3.2 pp, 95% CI [0.0, +9.0] (bootstrap over questions), again not clearly
+distinguishable.
+
+Read each table as a comparison between arms within that run only. Agent,
+judge, machine and question set all differ from the pooled study, so
+differences between these tables and it cannot be attributed to the model.
+Both runs sit at the ceiling: three questions per run were ever answered
+imperfectly.
 
 ## Repo layout
 
